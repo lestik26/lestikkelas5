@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Berpikir Komputasional - Kelas 5</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f3f4f6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .option-label {
+            transition: all 0.2s;
+        }
+        .option-label:hover {
+            background-color: #e0e7ff;
+        }
+        input[type="radio"]:checked + span {
+            font-weight: bold;
+            color: #4338ca;
+        }
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.3); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- Main Container -->
+    <div id="app-container" class="bg-white rounded-2xl shadow-xl w-full max-w-6xl overflow-hidden fade-in flex flex-col md:flex-row h-[95vh]">
+        
+        <!-- Left Panel: Rangkuman Materi (Paragraph style, lengkap & komprehensif) -->
+        <div class="w-full md:w-1/3 bg-yellow-50 border-b md:border-b-0 md:border-r border-yellow-200 flex flex-col h-1/3 md:h-full">
+            <div class="p-4 md:p-5 border-b border-yellow-200 bg-yellow-100 flex-shrink-0 z-10 shadow-sm">
+                <h2 class="text-lg md:text-xl font-bold text-yellow-800 flex items-center">
+                    <svg class="w-5 h-5 md:w-6 md:h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    Rangkuman Materi Lengkap
+                </h2>
+            </div>
+            <div id="combined-context" class="p-4 md:p-6 overflow-y-auto custom-scrollbar flex-grow text-sm text-gray-700 leading-relaxed space-y-4">
+                <!-- Injected dynamically by JS as paragraphs -->
+            </div>
+        </div>
+
+        <!-- Right Panel: Quiz Area -->
+        <div class="w-full md:w-2/3 flex flex-col h-2/3 md:h-full overflow-y-auto custom-scrollbar bg-white relative">
+        
+            <!-- Header -->
+            <div class="bg-indigo-600 text-white p-5 text-center shrink-0">
+                <h1 class="text-xl md:text-2xl font-bold">Asesmen: Berpikir Komputasional</h1>
+                <p class="text-indigo-100 text-sm mt-1">Informatika SD/MI Kelas 5</p>
+            </div>
+
+            <!-- Start Screen -->
+            <div id="start-screen" class="p-8 text-center fade-in my-auto">
+                <img src="https://api.dicebear.com/7.x/bottts/svg?seed=computer&backgroundColor=c0aede" alt="Robot" class="w-32 h-32 mx-auto mb-4 rounded-full shadow-sm">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Selamat Datang di Ujian Bab 1!</h2>
+                <p class="text-gray-600 mb-6 text-left max-w-xl mx-auto">
+                    Ujian ini terdiri dari: <br>
+                    - <strong>30</strong> Soal Pilihan Ganda (Otomatis dinilai)<br>
+                    - <strong>10</strong> Soal Isian Singkat (Otomatis dinilai)<br>
+                    - <strong>10</strong> Soal Esai (Akan diberikan referensi jawaban di akhir)<br><br>
+                    Baca rangkuman materi lengkap di panel sebelah kiri dengan teliti untuk membantumu menjawab seluruh soal dengan benar!
+                </p>
+                <button onclick="startQuiz()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:scale-105">
+                    Mulai Ujian
+                </button>
+            </div>
+
+            <!-- Quiz Screen (Hidden by default) -->
+            <div id="quiz-screen" class="hidden flex-col flex-grow p-6 md:p-8 justify-between fade-in">
+                <div>
+                    <!-- Status & Question Number -->
+                    <div class="flex justify-between items-center mb-4 text-sm font-semibold text-gray-500 border-b pb-2">
+                        <span id="question-type-badge" class="bg-indigo-100 text-indigo-800 py-1 px-3 rounded-full uppercase tracking-wider text-xs">Pilihan Ganda</span>
+                        <span id="question-counter">Soal 1 / 50</span>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-6">
+                        <div id="progress-bar" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+
+                    <!-- Question Title -->
+                    <h2 id="question-text" class="text-lg font-semibold text-gray-800 mb-5">
+                        Memuat soal...
+                    </h2>
+
+                    <!-- Answer Area (Dynamic) -->
+                    <div id="answer-area" class="space-y-3 mb-6">
+                        <!-- Injected by JS -->
+                    </div>
+                </div>
+
+                <!-- Footer / Navigation -->
+                <div class="bg-gray-50 p-3 border-t flex justify-end">
+                    <button onclick="nextQuestion()" id="next-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded shadow transition">
+                        Selanjutnya &rarr;
+                    </button>
+                </div>
+            </div>
+
+            <!-- Result Screen -->
+            <div id="result-screen" class="hidden p-8 fade-in">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Ujian Selesai!</h2>
+                    <p class="text-gray-600">Terima kasih telah menyelesaikan ujian.</p>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-6 mb-8 justify-center">
+                    <!-- Score Cards -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center flex-1">
+                        <h3 class="text-lg font-semibold text-blue-800 mb-1">Skor Pilihan Ganda</h3>
+                        <p class="text-4xl font-bold text-blue-600"><span id="score-pg">0</span><span class="text-xl text-blue-400">/30</span></p>
+                    </div>
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-6 text-center flex-1">
+                        <h3 class="text-lg font-semibold text-green-800 mb-1">Skor Isian</h3>
+                        <p class="text-4xl font-bold text-green-600"><span id="score-isian">0</span><span class="text-xl text-green-400">/10</span></p>
+                    </div>
+                </div>
+
+                <!-- Essay Review -->
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Review Jawaban Esai Anda</h3>
+                    <p class="text-sm text-gray-500 mb-4">Soal esai dinilai secara mandiri. Bandingkan jawaban Anda dengan kunci jawaban di bawah ini.</p>
+                    
+                    <div id="essay-review-container" class="space-y-6 max-h-96 overflow-y-auto pr-2">
+                        <!-- Injected by JS -->
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <button onclick="location.reload()" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-8 rounded-full shadow transition">
+                        Kembali ke Beranda
+                    </button>
+                </div>
+            </div>
+
+        </div> <!-- Closing Right Panel -->
+
+    </div>
+
+    <script>
+        const questions = [
+            // ================= PILIHAN GANDA (1-30) =================
+            { type: 'pg', q: "Arti kata computational thinking adalah kecuali ....", opts: ["a. berpikir komputasi", "b. compute dan think", "c. hitung dan pikir", "d. pikir dan bertanya"], ans: 3 },
+            { type: 'pg', q: "Fungsi pengenalan pola adalah fungsi yang membantu dalam mengetahui pola atau langkah-langkah yang dapat ....", opts: ["a. membantu mengetahui langkah selanjutnya", "b. memecah kegiatan menjadi lebih kecil", "c. menyusun program", "d. menemukan informasi"], ans: 0 },
+            { type: 'pg', q: "Berikut yang merupakan contoh pengenalan pola adalah ....", opts: ["a. menyusun pola manik-manik untuk membuat gelang", "b. prosedur menyimpan sepatu", "c. menggunakan tisu untuk membersihkan meja", "d. membuat buku tahunan"], ans: 0 },
+            { type: 'pg', q: "Berikut yang bukan merupakan karakteristik berpikir komputasional adalah ....", opts: ["a. mampu memberikan pemecahan masalah", "b. mampu menganalisa data", "c. mampu melakukan representasi data melalui abstraksi", "d. mampu memecahkan masalah rumit dengan cara yang rumit"], ans: 3 },
+            { type: 'pg', q: "Salah satu karakteristik berpikir komputasional adalah ....", opts: ["a. tidak mampu menganalisa sistem", "b. mampu memberikan solusi untuk berbagai masalah yang berbeda", "c. menggambarkan dengan tidak jelas sebuah objek", "d. memecahkan masalah dengan cara yang rumit"], ans: 1 },
+            { type: 'pg', q: "Berikut yang bukan contoh metode berpikir komputasional adalah ....", opts: ["a. abstraksi", "b. komposisi", "c. dekomposisi", "d. rancangan algoritma"], ans: 1 },
+            { type: 'pg', q: "Mengembangkan petunjuk pemecahan masalah yang sama secara step by step, tahapan demi tahapan disebut dengan ....", opts: ["a. dekomposisi", "b. pengenalan pola", "c. abstraksi", "d. algoritma"], ans: 3 },
+            { type: 'pg', q: "Orang yang biasa berpikir komputasional akan dapat menyelesaikan masalah karena membiasakan otaknya berpikir secara ....", opts: ["a. terstruktur, pesimis, kreatif", "b. logis, terstruktur, dan kreatif", "c. kreatif, pesimis, terstruktur", "d. logis, pesimis, kreatif"], ans: 1 },
+            { type: 'pg', q: "Urutan algoritma membuat kopi panas: (1) Siapkan gelas, (2) Panaskan air, (3) Tuang kopi gula, (4) Mulai, (5) Tuang air panas, (6) Selesai. Urutan yang benar adalah ....", opts: ["a. (4)-(6)-(2)-(1)-(5)-(3)", "b. (2)-(1)-(4)-(3)-(5)-(6)", "c. (4)-(2)-(3)-(6)-(1)-(5)", "d. (4)-(1)-(2)-(3)-(5)-(6)"], ans: 3 },
+            { type: 'pg', q: "Amatilah pola berikut! 2, 4, 6, 8, ... Angka yang tepat untuk melengkapi pola tersebut adalah ....", opts: ["a. 8", "b. 12", "c. 10", "d. 18"], ans: 2 },
+            { type: 'pg', q: "Langkah-langkah: (1) Nyalakan monitor, (2) Sambung steker ke stop kontak, (3) Tekan tombol power. Urutan yang benar menyalakan komputer adalah ....", opts: ["a. (1)-(2)-(3)", "b. (3)-(2)-(1)", "c. (2)-(1)-(3)", "d. (2)-(3)-(1)"], ans: 3 },
+            { type: 'pg', q: "Perhatikan pernyataan: (1) Takaran bahan, (2) Alat dan Bahan, (3) Cara membuat kue, (4) Kandungan telur. Urutan algoritma pembuatan kue adalah ....", opts: ["a. (2), (3), dan (4)", "b. (1), (3), dan (4)", "c. (1), (2), dan (3)", "d. (1), (2), dan (4)"], ans: 2 },
+            { type: 'pg', q: "Berikut urutan algoritma yang tepat dalam memakai sepatu ....", opts: ["a. talikan sepatu - pakai sepatu - pakai kaus kaki", "b. pakai kaus kaki - pakai sepatu - talikan sepatu", "c. pakai sepatu - talikan sepatu - pakai kaus kaki", "d. talikan sepatu - kaus kaki - pakai sepatu"], ans: 1 },
+            { type: 'pg', q: "Ambil cangkir, masukkan kopi instan, tuang air panas, aduk. Ini merupakan contoh algoritma membuat ....", opts: ["a. kopi instan", "b. minum teh", "c. air mineral", "d. minum obat"], ans: 0 },
+            { type: 'pg', q: "Mencuci pakaian bernoda dengan menambahkan deterjen dan FOKUS mengucek nodanya saja merupakan penerapan ....", opts: ["a. dekomposisi", "b. abstraksi", "c. pengenalan pola", "d. algoritma"], ans: 1 },
+            { type: 'pg', q: "Berpikir komputasional dapat diterapkan dalam kehidupan sehari-hari saat ....", opts: ["a. hanya di dunia komputer", "b. tidak dapat diterapkan", "c. dalam berbagai situasi, seperti merencanakan jadwal harian", "d. hanya dalam matematika"], ans: 2 },
+            { type: 'pg', q: "Ayah Andi bekerja membuat program di perusahaan teknologi. Ayah Andi adalah seorang ....", opts: ["a. programming", "b. programmer", "c. algoritma", "d. program"], ans: 1 },
+            { type: 'pg', q: "Pak Toni mengisi 1 ember perlu 45 menit. Jika mengisi 5 ember, berapa lama waktunya?", opts: ["a. 300 menit", "b. 450 menit", "c. 225 menit", "d. 3600 menit"], ans: 2 },
+            { type: 'pg', q: "Apa tujuan utama dari tahapan dekomposisi?", opts: ["a. Membuat masalah makin rumit", "b. Mengabaikan detail masalah", "c. Memecah masalah besar menjadi bagian kecil agar mudah diselesaikan", "d. Menulis kode program"], ans: 2 },
+            { type: 'pg', q: "Ketika menyusun buku di rak berdasarkan ukuran dari besar ke kecil, kita sedang menerapkan prinsip ....", opts: ["a. Algoritma", "b. Abstraksi", "c. Pengenalan Pola", "d. Dekomposisi"], ans: 2 },
+            { type: 'pg', q: "Membuat jadwal kegiatan dari pagi sampai malam secara berurutan disebut merancang ....", opts: ["a. Algoritma", "b. Pola", "c. Dekomposisi", "d. Abstraksi"], ans: 0 },
+            { type: 'pg', q: "Mengapa abstraksi penting dalam berpikir komputasional?", opts: ["a. Agar masalah terlihat lebih banyak", "b. Untuk menghilangkan informasi yang tidak penting dan fokus pada solusi utama", "c. Supaya langkah-langkah menjadi acak", "d. Untuk menghias program"], ans: 1 },
+            { type: 'pg', q: "Saat merakit sepeda baru dari dalam kardus, langkah pertama yang paling tepat (dekomposisi) adalah ....", opts: ["a. Langsung menaiki sepeda", "b. Memisahkan bagian roda, rangka, dan baut-baut", "c. Membuang buku petunjuk", "d. Mengecat sepeda"], ans: 1 },
+            { type: 'pg', q: "Jika pola angka adalah 5, 10, 15, 20... Maka angka selanjutnya adalah ....", opts: ["a. 21", "b. 25", "c. 30", "d. 35"], ans: 1 },
+            { type: 'pg', q: "Melihat awan gelap lalu memprediksi akan turun hujan adalah contoh dari kemampuan ....", opts: ["a. Dekomposisi", "b. Pengenalan Pola", "c. Komputerisasi", "d. Pemrograman"], ans: 1 },
+            { type: 'pg', q: "Membagi tugas piket kelas: Budi menyapu, Ani mengepel, Cita menghapus papan tulis. Ini adalah penerapan ....", opts: ["a. Dekomposisi", "b. Abstraksi", "c. Algoritma", "d. Pengenalan Pola"], ans: 0 },
+            { type: 'pg', q: "Saat melihat peta kota, kita hanya melihat gambar jalan utama, bukan jumlah pohon atau rumah. Peta adalah contoh dari ....", opts: ["a. Dekomposisi", "b. Abstraksi", "c. Algoritma", "d. Pengenalan Pola"], ans: 1 },
+            { type: 'pg', q: "Keterampilan berpikir komputasional sangat penting di abad ke-21 karena ....", opts: ["a. Membuat kita bisa main game", "b. Membantu menyelesaikan masalah dengan efisien dan sistematis", "c. Membuat komputer bekerja lebih lambat", "d. Hanya digunakan oleh ilmuwan"], ans: 1 },
+            { type: 'pg', q: "Apa arti dari langkah yang 'terstruktur' dalam sebuah algoritma?", opts: ["a. Acak", "b. Bebas", "c. Berurutan dan sistematis", "d. Tidak jelas"], ans: 2 },
+            { type: 'pg', q: "Dalam pembuatan program komputer, jika algoritma salah maka ....", opts: ["a. Komputer akan meledak", "b. Program tidak akan berjalan sesuai harapan", "c. Program menjadi lebih cepat", "d. Komputer menjadi pintar"], ans: 1 },
+
+            // ================= ISIAN (1-10) =================
+            { type: 'isian', q: "Perhatikan pola angka berikut! 3, 6, 9, 12, ... Angka yang tepat untuk melengkapi pola tersebut adalah?", ans: "15" },
+            { type: 'isian', q: "Langkah berurutan untuk menyelesaikan suatu kegiatan disebut ...", ans: "algoritma" },
+            { type: 'isian', q: "Mengurutkan tahapan pembuatan kue ulang tahun merupakan contoh penggunaan teknik ...", ans: "algoritma" },
+            { type: 'isian', q: "Hani memecah pekerjaan besar menjadi bagian tugas yang lebih sederhana supaya mudah dikerjakan. Ini disebut ...", ans: "dekomposisi" },
+            { type: 'isian', q: "Kemampuan untuk menemukan kesamaan atau aturan dalam kejadian yang sering terulang disebut pengenalan ...", ans: "pola" },
+            { type: 'isian', q: "Menyederhanakan ide rumit menjadi gambaran sederhana dengan membuang detail yang tidak penting disebut ...", ans: "abstraksi" },
+            { type: 'isian', q: "Orang yang pekerjaannya membuat program komputer disebut ...", ans: "programmer" },
+            { type: 'isian', q: "Ilmu yang mempelajari tentang komputer, data, dan cara berpikir komputasional disebut ...", ans: "informatika" },
+            { type: 'isian', q: "Dalam pola bilangan 10, 20, 30, 40, bilangan kelima adalah ...", ans: "50" },
+            { type: 'isian', q: "Cara berpikir yang membantu kita memecahkan masalah seperti cara komputer bekerja disebut berpikir ...", ans: "komputasional" },
+
+            // ================= ESAI (1-10) =================
+            { type: 'essay', q: "Apa yang akan terjadi jika algoritma komputer tidak ditulis secara berurutan?", ref: "Program komputer akan error, mengalami kegagalan, atau menghasilkan output (hasil) yang tidak sesuai karena instruksinya tidak runtut." },
+            { type: 'essay', q: "Apa yang dimaksud dengan pola dalam berpikir komputasional?", ref: "Pola adalah bentuk kesamaan, aturan, atau karakteristik yang berulang-ulang dalam sebuah data atau kejadian." },
+            { type: 'essay', q: "Jelaskan yang dimaksud dengan dekomposisi!", ref: "Dekomposisi adalah teknik memecah masalah yang besar dan rumit menjadi bagian-bagian atau tugas yang lebih kecil agar mudah dikelola." },
+            { type: 'essay', q: "Sebutkan 3 contoh kegiatan sehari-hari dalam penerapan algoritma!", ref: "1. Memasak mie instan. 2. Mengikat tali sepatu. 3. Membuat secangkir teh hangat." },
+            { type: 'essay', q: "Adik akan mengenakan sepatu. Tuliskan urutan (algoritma) menggunakan sepatu yang benar!", ref: "1. Siapkan kaus kaki dan sepatu. 2. Pakai kaus kaki terlebih dahulu. 3. Masukkan kaki ke dalam sepatu. 4. Rekatkan perekat atau ikat tali sepatu." },
+            { type: 'essay', q: "Jelaskan perbedaan antara Dekomposisi dan Abstraksi!", ref: "Dekomposisi adalah memecah masalah besar menjadi bagian kecil. Sedangkan Abstraksi adalah memilah informasi, fokus pada hal utama dan membuang detail yang tidak penting." },
+            { type: 'essay', q: "Sebutkan 4 fondasi utama dalam berpikir komputasional (Computational Thinking)!", ref: "1. Dekomposisi, 2. Pengenalan Pola, 3. Abstraksi, 4. Algoritma." },
+            { type: 'essay', q: "Mengapa pengenalan pola sangat penting saat memecahkan masalah?", ref: "Karena kita dapat mendaur ulang solusi lama untuk masalah serupa tanpa harus mulai berpikir dari nol." },
+            { type: 'essay', q: "Berikan contoh penerapan abstraksi dalam belajar di kelas!", ref: "Saat merangkum materi buku pelajaran yang tebal, kita hanya mencatat intisari poin pentingnya saja." },
+            { type: 'essay', q: "Jika kamu ingin membuat jus mangga, sebutkan algoritma sederhananya!", ref: "1. Kupas dan potong buah mangga. 2. Masukkan ke dalam blender. 3. Tambahkan air dan gula. 4. Blender hingga halus, lalu tuang ke gelas." }
+        ];
+
+        function initCombinedContext() {
+            const contextContainer = document.getElementById('combined-context');
+            let paragraphHtml = `
+                <p class="text-justify leading-relaxed">
+                    <strong>Berpikir Komputasional (Computational Thinking)</strong> adalah metode pemecahan masalah yang mengadopsi cara kerja seorang pembuat program komputer (programmer). Cara berpikir ini tidak hanya digunakan ketika kita berinteraksi dengan mesin komputer, melainkan juga sangat ampuh diterapkan dalam menyelesaikan berbagai persoalan nyata di kehidupan sehari-hari, mulai dari merencanakan jadwal belajar, memasak di dapur, hingga merapikan barang.
+                </p>
+                <p class="text-justify leading-relaxed">
+                    Terdapat <strong>empat fondasi pilar utama</strong> dalam berpikir komputasional yang wajib kita kuasai. Pilar pertama adalah <strong>Algoritma</strong>, yaitu susunan instruksi atau langkah-langkah logis yang ditulis secara berurutan, terstruktur, dan sistematis dari awal hingga akhir untuk mencapai tujuan tertentu. Jika tahapan algoritma terbalik atau salah, maka hasil akhir dari pekerjaan tersebut akan gagal atau mengalami kesalahan (error).
+                </p>
+                <p class="text-justify leading-relaxed">
+                    Pilar kedua adalah <strong>Dekomposisi</strong>. Dekomposisi adalah teknik memecah atau membongkar suatu persoalan besar, rumit, atau pekerjaan yang berat menjadi bagian-bagian sub-tugas yang jauh lebih kecil dan sederhana. Dengan cara ini, kita dapat fokus menyelesaikan satu per satu bagian kecil tersebut tanpa merasa kewalahan. Contoh nyata dekomposisi adalah saat merakit mainan dari kardus dengan memisahkan baut, roda, dan rangkanya terlebih dahulu.
+                </p>
+                <p class="text-justify leading-relaxed">
+                    Pilar ketiga adalah <strong>Pengenalan Pola (Pattern Recognition)</strong>. Ini adalah kemampuan otak kita untuk mendeteksi kesamaan, tren, keteraturan, atau aturan berulang yang terdapat pada berbagai data atau kejadian. Contohnya adalah membaca deret angka (misalnya kelipatan 2, 3, atau 5), memprediksi cuaca dari bentuk awan gelap, atau mengenali pola dekorasi manik-manik pada gelang. Dengan mengenali pola, kita bisa menyelesaikan masalah serupa dengan lebih cepat tanpa harus berpikir dari nol.
+                </p>
+                <p class="text-justify leading-relaxed">
+                    Pilar keempat adalah <strong>Abstraksi</strong>. Abstraksi merupakan proses menyederhanakan ide atau konsep yang rumit dengan cara membuang atau mengabaikan rincian detail informasi yang tidak penting, sehingga kita bisa langsung fokus pada inti permasalahan utamanya saja. Contoh penerapan abstraksi adalah saat kita melihat peta kota di mana peta hanya menampilkan jalan-jalan utama dan mengabaikan detail seperti jumlah daun pada pohon atau warna cat rumah di pinggir jalan.
+                </p>
+                <p class="text-justify leading-relaxed">
+                    Profesi di bidang teknologi yang mengandalkan kemampuan merancang kode dan logika terstruktur ini disebut sebagai seorang <strong>Programmer</strong>. Dengan membiasakan diri melatih otak berpikir secara logis, terstruktur, dan kreatif menggunakan keempat pilar ini, kita dapat merencanakan kegiatan dan mengambil keputusan secara jauh lebih efisien di abad modern.
+                </p>
+            `;
+            contextContainer.innerHTML = paragraphHtml;
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        let shuffledQuestions = [];
+        let currentIndex = 0;
+        let scorePG = 0;
+        let scoreIsian = 0;
+        let userAnswers = [];
+
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const questionText = document.getElementById('question-text');
+        const answerArea = document.getElementById('answer-area');
+        const questionCounter = document.getElementById('question-counter');
+        const progressBar = document.getElementById('progress-bar');
+        const typeBadge = document.getElementById('question-type-badge');
+        const btnNext = document.getElementById('next-btn');
+
+        window.onload = function() {
+            initCombinedContext();
+        };
+
+        function startQuiz() {
+            const pgQuestions = questions.filter(q => q.type === 'pg');
+            const isianQuestions = questions.filter(q => q.type === 'isian');
+            const essayQuestions = questions.filter(q => q.type === 'essay');
+
+            shuffleArray(pgQuestions);
+            shuffleArray(isianQuestions);
+            shuffleArray(essayQuestions);
+
+            shuffledQuestions = [...pgQuestions, ...isianQuestions, ...essayQuestions];
+            userAnswers = new Array(shuffledQuestions.length).fill(null);
+            
+            startScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            quizScreen.classList.add('flex');
+            
+            currentIndex = 0;
+            loadQuestion(currentIndex);
+        }
+
+        function loadQuestion(index) {
+            const q = shuffledQuestions[index];
+            
+            questionCounter.innerText = `Soal ${index + 1} / ${shuffledQuestions.length}`;
+            progressBar.style.width = `${((index) / shuffledQuestions.length) * 100}%`;
+            
+            questionText.innerText = q.q;
+            answerArea.innerHTML = '';
+            
+            quizScreen.classList.remove('fade-in');
+            void quizScreen.offsetWidth;
+            quizScreen.classList.add('fade-in');
+
+            if (q.type === 'pg') {
+                typeBadge.innerText = "Pilihan Ganda";
+                typeBadge.className = "bg-blue-100 text-blue-800 py-1 px-3 rounded-full uppercase tracking-wider text-xs font-bold";
+                
+                q.opts.forEach((opt, i) => {
+                    const isChecked = userAnswers[index] === i ? 'checked' : '';
+                    const html = `
+                        <label class="option-label flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer">
+                            <input type="radio" name="pg-answer" value="${i}" class="mt-1 mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500" ${isChecked}>
+                            <span class="text-gray-700">${opt}</span>
+                        </label>
+                    `;
+                    answerArea.innerHTML += html;
+                });
+            } 
+            else if (q.type === 'isian') {
+                typeBadge.innerText = "Isian Singkat";
+                typeBadge.className = "bg-green-100 text-green-800 py-1 px-3 rounded-full uppercase tracking-wider text-xs font-bold";
+                
+                const val = userAnswers[index] || '';
+                answerArea.innerHTML = `
+                    <input type="text" id="isian-input" value="${val}" placeholder="Ketik jawaban singkatmu di sini..." 
+                           class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                `;
+                setTimeout(() => {
+                    const inp = document.getElementById('isian-input');
+                    if(inp) inp.focus();
+                }, 100);
+            } 
+            else if (q.type === 'essay') {
+                typeBadge.innerText = "Esai";
+                typeBadge.className = "bg-purple-100 text-purple-800 py-1 px-3 rounded-full uppercase tracking-wider text-xs font-bold";
+                
+                const val = userAnswers[index] || '';
+                answerArea.innerHTML = `
+                    <textarea id="essay-input" rows="4" placeholder="Jelaskan jawabanmu dengan lengkap di sini..." 
+                              class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition resize-none">${val}</textarea>
+                `;
+                setTimeout(() => {
+                    const inp = document.getElementById('essay-input');
+                    if(inp) inp.focus();
+                }, 100);
+            }
+
+            if (index === shuffledQuestions.length - 1) {
+                btnNext.innerText = "Selesai & Lihat Hasil";
+                btnNext.classList.replace('bg-indigo-600', 'bg-green-600');
+                btnNext.classList.replace('hover:bg-indigo-700', 'hover:bg-green-700');
+            } else {
+                btnNext.innerHTML = "Selanjutnya &rarr;";
+                btnNext.classList.replace('bg-green-600', 'bg-indigo-600');
+                btnNext.classList.replace('hover:bg-green-700', 'hover:bg-indigo-700');
+            }
+        }
+
+        function saveAnswer() {
+            const q = shuffledQuestions[currentIndex];
+            if (q.type === 'pg') {
+                const selected = document.querySelector('input[name="pg-answer"]:checked');
+                if (selected) {
+                    userAnswers[currentIndex] = parseInt(selected.value);
+                }
+            } else if (q.type === 'isian') {
+                const input = document.getElementById('isian-input');
+                if (input) userAnswers[currentIndex] = input.value.trim();
+            } else if (q.type === 'essay') {
+                const input = document.getElementById('essay-input');
+                if (input) userAnswers[currentIndex] = input.value.trim();
+            }
+        }
+
+        function nextQuestion() {
+            saveAnswer();
+            
+            if (currentIndex < shuffledQuestions.length - 1) {
+                currentIndex++;
+                loadQuestion(currentIndex);
+            } else {
+                finishQuiz();
+            }
+        }
+
+        function finishQuiz() {
+            quizScreen.classList.add('hidden');
+            quizScreen.classList.remove('flex');
+            resultScreen.classList.remove('hidden');
+
+            calculateScores();
+            displayEssayReview();
+        }
+
+        function calculateScores() {
+            scorePG = 0;
+            scoreIsian = 0;
+
+            shuffledQuestions.forEach((q, index) => {
+                if (q.type === 'pg') {
+                    if (userAnswers[index] === q.ans) scorePG++;
+                } else if (q.type === 'isian') {
+                    const userAnswer = (userAnswers[index] || '').toString().toLowerCase().replace(/\s+/g, '');
+                    const correctAnswer = q.ans.toString().toLowerCase().replace(/\s+/g, '');
+                    if (userAnswer === correctAnswer) {
+                        scoreIsian++;
+                    }
+                }
+            });
+
+            document.getElementById('score-pg').innerText = scorePG;
+            document.getElementById('score-isian').innerText = scoreIsian;
+        }
+
+        function displayEssayReview() {
+            const container = document.getElementById('essay-review-container');
+            container.innerHTML = '';
+            
+            let essayNumber = 1;
+            shuffledQuestions.forEach((q, index) => {
+                if (q.type === 'essay') {
+                    const uAns = userAnswers[index] || '<span class="text-gray-400 italic">Tidak dijawab</span>';
+                    const html = `
+                        <div class="border-b border-gray-200 pb-4 last:border-0 last:pb-0">
+                            <p class="font-semibold text-gray-800 text-sm mb-2">Esai ${essayNumber}. ${q.q}</p>
+                            <div class="mb-2">
+                                <span class="text-xs font-bold text-gray-500 uppercase">Jawaban Anda:</span>
+                                <p class="text-sm bg-white p-3 rounded border text-gray-700">${uAns}</p>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-green-600 uppercase">Kunci Referensi Jawaban:</span>
+                                <p class="text-sm bg-green-50 p-3 rounded border border-green-100 text-green-800">${q.ref}</p>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += html;
+                    essayNumber++;
+                }
+            });
+        }
+    </script>
+</body>
+</html>
